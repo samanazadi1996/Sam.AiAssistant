@@ -1,0 +1,30 @@
+﻿@{
+    ViewData["Title"] = "خانه";
+    var isAuthenticated = User.Identity?.IsAuthenticated ?? false;
+}
+
+<div dir="rtl" class="py-4">
+    <h1 class="display-6">Sam.AiAssistant</h1>
+    <p class="lead">برنامه‌ی نمونه برای ماژول دستیار هوشمند (Ollama).</p>
+
+    @if (!isAuthenticated)
+    {
+        <div class="alert alert-info">برای دیدن دکمه‌ی دستیار ابتدا <a asp-controller="Account" asp-action="Login">وارد شوید</a>.</div>
+    }
+    else
+    {
+        <div class="alert alert-success">
+            وارد شده‌اید (@User.Identity!.Name). دکمه‌ی ربات پایین-چپ صفحه است.
+            @if (User.IsInRole("admin"))
+            {
+                <span> پنل مدیریت: <a href="~/ai-assistant/admin">/ai-assistant/admin</a></span>
+            }
+        </div>
+    }
+
+    <h5 class="mt-4">پیش‌نیاز</h5>
+    <ul>
+        <li>SQL Server (رشته‌ی اتصال در <code>appsettings.json</code>؛ دیتابیس و جدول‌ها خودکار ساخته می‌شوند)</li>
+        <li>Ollama روی <code>http://localhost:11434</code> با <code>ollama pull qwen2.5:7b</code> (آدرس و مدل از پنل مدیریت قابل تغییر است)</li>
+    </ul>
+</div>

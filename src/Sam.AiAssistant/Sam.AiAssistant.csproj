@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <RootNamespace>Sam.AiAssistant</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+    <PackageReference Include="Microsoft.Data.SqlClient" Version="6.1.7" />
+    <PackageReference Include="System.Security.Cryptography.Pkcs" Version="11.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- JS و صفحه مدیریت داخل خود DLL هستند تا کتابخانه کاملاً مستقل باشد. -->
+    <EmbeddedResource Include="Assets\**\*" LogicalName="AiAssistant.Assets.%(Filename)%(Extension)" />
+  </ItemGroup>
+
+</Project>

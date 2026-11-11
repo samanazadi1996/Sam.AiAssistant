@@ -1,0 +1,13 @@
+@{
+    ViewData["Title"] = "ورود آزمایشی";
+}
+
+<div class="mx-auto" style="max-width: 480px" dir="rtl">
+    <h2 class="mb-3">ورود آزمایشی</h2>
+    <p class="text-muted">این برنامه فقط برای نمایش ماژول دستیار هوشمند است و ورود بدون رمز انجام می‌شود.</p>
+
+    <form asp-action="LoginAs" method="post" class="d-grid gap-2">
+        <button name="role" value="user" class="btn btn-primary">ورود به‌عنوان کاربر عادی (چت)</button>
+        <button name="role" value="admin" class="btn btn-outline-dark">ورود به‌عنوان مدیر (چت + پنل مدیریت)</button>
+    </form>
+</div>
