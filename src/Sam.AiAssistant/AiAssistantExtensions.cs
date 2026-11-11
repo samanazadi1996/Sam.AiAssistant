@@ -22,6 +22,7 @@ public static class AiAssistantExtensions
 
         services.AddSingleton(options);
         services.AddSingleton<AiAssistantStore>();
+        services.AddSingleton<AiConversationMemory>();
         services.AddScoped<AiContextBuilder>();
         services.AddHttpClient<AiChatService>(c => c.Timeout = Timeout.InfiniteTimeSpan); // Timeout از تنظیمات خوانده می‌شود
         services.AddHostedService<AiAssistantInitializer>();
@@ -98,7 +99,7 @@ public static class AiAssistantExtensions
 
             try
             {
-                var answer = await chat.SendMessageAsync(options.EvaluateParameters(ctx), question, ctx.RequestAborted);
+                var answer = await chat.SendMessageAsync(options.EvaluateParameters(ctx), question, request.ConversationId, ctx.RequestAborted);
                 return Results.Ok(new { success = true, answer });
             }
             catch (AiAssistantException ex)
@@ -229,7 +230,7 @@ public static class AiAssistantExtensions
             : System.Text.RegularExpressions.Regex.Replace(value, @"(?i)(password|pwd)\s*=\s*[^;]*",
                 m => m.Value.Split('=')[0] + "=" + PasswordMask);
 
-    private sealed record ChatRequest(string? Message);
+    private sealed record ChatRequest(string? Message, string? ConversationId = null);
 
     private const string TokenHeader = "X-Ai-Token";
 

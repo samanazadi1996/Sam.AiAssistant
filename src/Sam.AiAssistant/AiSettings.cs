@@ -66,6 +66,9 @@ public sealed class AiSettings
         new("MaxRowsPerSection", "محدودیت‌ها", "حداکثر ردیف هر Section", "30"),
         new("MaxSectionChars", "محدودیت‌ها", "حداکثر کاراکتر داده هر Section", "3000"),
         new("MaxContextChars", "محدودیت‌ها", "حداکثر کاراکتر کل Context", "16000"),
+
+        new("MemoryTurns", "حافظه گفتگو", "تعداد نوبت‌های قبلی (هر نوبت = یک سؤال کاربر + پاسخ دستیار) که مدل به یاد دارد. مثلاً ۱۰ یعنی ۱۰ پیام آخر کاربر و ۱۰ پاسخ آخر دستیار. ۰ = حافظه خاموش", "10"),
+        new("MemoryMaxCharsPerMessage", "حافظه گفتگو", "حداکثر کاراکتر هر پیام ذخیره‌شده در حافظه (برای کنترل حجم Prompt)", "1500"),
     ];
 
     private readonly IReadOnlyDictionary<string, string> _values;
@@ -101,4 +104,6 @@ public sealed class AiSettings
     public int MaxRowsPerSection => Int("MaxRowsPerSection", 30);
     public int MaxSectionChars => Int("MaxSectionChars", 3000);
     public int MaxContextChars => Int("MaxContextChars", 16000);
+    public int MemoryTurns => Math.Min(Int("MemoryTurns", 10, min: 0), 50);
+    public int MemoryMaxCharsPerMessage => Int("MemoryMaxCharsPerMessage", 1500);
 }

@@ -15,11 +15,13 @@ public sealed class AiChatService(
     AiAssistantStore store,
     AiAssistantOptions options,
     AiContextBuilder contextBuilder,
+    AiConversationMemory memory,
     HttpClient httpClient,
     ILogger<AiChatService> logger)
 {
     public async Task<string> SendMessageAsync(
-        IReadOnlyDictionary<string, object?> parameters, string question, CancellationToken ct = default)
+        IReadOnlyDictionary<string, object?> parameters, string question, string? conversationId = null,
+        CancellationToken ct = default)
     {
         var settings = await store.GetSettingsAsync(ct);
         var userKey = options.RequiredParameter is not null && parameters.TryGetValue(options.RequiredParameter, out var u)
@@ -36,7 +38,17 @@ public sealed class AiChatService(
             var userMessage = AiContextBuilder.Render(settings.Get("UserMessageTemplate"),
                 new() { ["Context"] = context, ["Question"] = question });
 
-            answer = await CallOllamaAsync(settings, settings.Get("SystemMessage"), userMessage, ct);
+            // حافظه: فقط وقتی شناسه گفتگوی معتبر داریم و MemoryTurns > 0
+            var memoryKey = IsValidConversationId(conversationId) ? userKey ?? "anonymous" : null;
+            var turns = memoryKey is null ? [] : memory.Get(memoryKey, conversationId!, settings.MemoryTurns);
+
+            answer = await CallOllamaAsync(settings, settings.Get("SystemMessage"), userMessage, ct, turns);
+
+            if (memoryKey is not null && answer != settings.Get("NotFoundMessage"))
+            {
+                var cap = settings.MemoryMaxCharsPerMessage;
+                memory.Add(memoryKey, conversationId!, Clip(question, cap), Clip(answer, cap), settings.MemoryTurns);
+            }
             return answer;
         }
         catch (AiAssistantException ex)
@@ -84,13 +96,29 @@ public sealed class AiChatService(
         }
     }
 
-    private async Task<string> CallOllamaAsync(AiSettings settings, string system, string user, CancellationToken ct)
+    public static bool IsValidConversationId(string? id)
+        => !string.IsNullOrEmpty(id) && id.Length <= 64 && id.All(c => char.IsAsciiLetterOrDigit(c) || c == '-' || c == '_');
+
+    private static string Clip(string text, int max) => text.Length <= max ? text : text[..max] + "…";
+
+    private async Task<string> CallOllamaAsync(
+        AiSettings settings, string system, string user, CancellationToken ct,
+        IReadOnlyList<AiConversationMemory.Turn>? history = null)
     {
+        // ترتیب: system → (سؤال/جواب‌های قبلی) → پیام فعلی همراه با Context تازه
+        var messages = new List<OllamaMessage> { new("system", system) };
+        foreach (var t in history ?? [])
+        {
+            messages.Add(new("user", t.Question));
+            messages.Add(new("assistant", t.Answer));
+        }
+        messages.Add(new("user", user));
+
         var body = new OllamaRequest
         {
             Model = settings.ModelName,
             Stream = false,
-            Messages = [new("system", system), new("user", user)],
+            Messages = messages,
             Options = new OllamaOptions { Temperature = settings.Temperature, NumCtx = settings.ContextWindow }
         };
 

@@ -168,6 +168,10 @@
             input.style.height = Math.min(input.scrollHeight, 120) + 'px';
         }
 
+        // شناسه گفتگو: هر بار بارگذاری صفحه یک گفتگوی جدید (حافظه سمت سرور نگه‌داری می‌شود)
+        var conversationId = (window.crypto && crypto.randomUUID) ? crypto.randomUUID()
+            : String(Date.now()) + '-' + Math.random().toString(36).slice(2);
+
         var busy = false;
         async function submit() {
             var text = input.value.trim();
@@ -180,7 +184,7 @@
             var loading = add('', 'bot');
             loading.innerHTML = '<span class="dots"><i></i><i></i><i></i></span>';
             try {
-                var res = await api('chat', { method: 'POST', body: JSON.stringify({ message: text }) });
+                var res = await api('chat', { method: 'POST', body: JSON.stringify({ message: text, conversationId: conversationId }) });
                 var data = null;
                 try { data = await res.json(); } catch (e) { /* غیر JSON */ }
                 loading.remove();
